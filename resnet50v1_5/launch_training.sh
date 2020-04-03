@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 . /etc/profile
+STEPS=${STEPS}
 BENCHMARKS=${BENCHMARKS}
 PWD=${PWD-$(pwd)}
 KMP_AFFINITY=${KMP_AFFINITY-'granularity=fine,verbose,compact,1,0'}
@@ -19,4 +20,4 @@ $PYTHON_EXE ${BENCHMARKS}/launch_benchmark.py \
          --mode=training \
          --framework=tensorflow \
          --checkpoint=$PWD/checkpoints \
-         --data-location=/tf_dataset/dataset/TF_Imagenet_FullData --steps=10 2>&1 | tee $PWD/logs/output.log
+         --data-location=/tf_dataset/dataset/TF_Imagenet_FullData --steps=$STEPS 2>&1 | tee $PWD/logs/output.log
