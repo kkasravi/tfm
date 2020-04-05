@@ -12,6 +12,9 @@ uninstall:
 deploy:
 	kubectl apply -f multi-node.yaml
 
+run-job:
+	kubectl apply -f tensorflow-horovod-mnist.yaml
+
 clean:
 	kubectl delete namespace kubeflow
 	kubectl delete clusterrolebindings.rbac.authorization.k8s.io mpi-operator
