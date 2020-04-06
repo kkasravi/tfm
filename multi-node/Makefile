@@ -22,4 +22,4 @@ clean:
 	kubectl delete crd mpijobs.kubeflow.org
 
 status:
-	kubectl get deployment -n kubeflow -oname
+	kubectl logs -n mpi-operator $(shell kubectl get -n mpi-operator pods -oname | sed 's/^pod\///')
