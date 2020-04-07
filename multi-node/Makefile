@@ -16,7 +16,7 @@ run-job:
 	kubectl apply -f tensorflow-horovod-mnist.yaml
 
 clean:
-	kubectl delete namespace kubeflow
+	kubectl delete namespace mpi-operator
 	kubectl delete clusterrolebindings.rbac.authorization.k8s.io mpi-operator
 	kubectl delete clusterroles.rbac.authorization.k8s.io mpi-operator
 	kubectl delete crd mpijobs.kubeflow.org
