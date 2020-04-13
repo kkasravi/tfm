@@ -71,7 +71,7 @@ tensorflow==2.1.0
 tensorflow-estimator==2.1.0
 tensorflow-metadata==0.21.1
 tensorflow-serving-api==2.1.0
-tensorflow-transform==0.22.0.dev0
+tensorflow-transform==0.21.2
 termcolor==1.1.0
 tfx-bsl==0.21.4
 typing==3.7.4.1

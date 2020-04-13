@@ -6,16 +6,17 @@ NUM_CORES:=20
 KMP_AFFINITY:='noverbose,warnings,respect,granularity=core,none'
 STEPS?=2
 
-all: inference
+all: build
 
 install:
-	dsh add gcc-9 openmpi-3.1.6 openssh-7.6
+	dsh add autoconf-2.69-11 gcc-9 openmpi-3.1.6 openssh-7.6
 
-venv:
+venv: install
 	dsh venv 3.7.0 resnet50v1_5 && \
 		pyenv local resnet50v1_5
 
-build:
+build: venv
+	pyenv virtualenvs && \
 	pip install -r requirements.txt
 
 clean:
