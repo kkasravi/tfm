@@ -9,7 +9,7 @@ STEPS?=2
 all: build
 
 install:
-	dsh add autoconf-2.69-11 gcc-9 openmpi-3.1.6 openssh-7.6
+	dsh add autoconf-2.69-11 gcc-9 openmpi-2.1.1-8 openssh-7.6
 
 venv: install
 	dsh venv 3.7.0 resnet50v1_5 && \
