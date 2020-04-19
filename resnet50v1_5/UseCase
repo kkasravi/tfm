@@ -1,0 +1,15 @@
+Steps (Tekton Tasks):
+1. apt install (Kustomize function)
+2. virtualenv create
+3. pip install requirements.txt
+4. Download dataset 
+5. Convert to TFRecord
+6. Run Training
+
+
+Environments (Kustomize Plugins):
+- Readme (Kustomize overlay) 
+- Notebook (Kustomize overlay)
+- Bare Metal (Kustomize overlay)
+- Docker (Kustomize overlay)
+- Kubernetes (Kustomize overlay)
