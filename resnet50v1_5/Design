@@ -1,0 +1,25 @@
+Design 
+1. Should be a type of generator, where different environments are generated that include the steps per model.
+   We don't want to expose the datascientist to complicated tooling.
+   We want each scenario (usecase) to be as simple as possible.
+   foreach model
+     foreach environment
+       foreach step
+2. Declarative / template free 
+
+
+Candidate frameworks:
+1. GoCD (https://www.gocd.org/)
+2. Kustomize (https://kustomize.io/)
+
+
+Thoughts on implementation of steps:
+- Steps almost need to be an api - where different environments may implement each step differently
+- Steps could be a DAG rather than a pipeline
+- Can steps be kustomize functions 
+
+
+Thoughts on implementation of environments:
+- Each environment needs to implement steps for each model. 
+  Each model has variants (fp32, bfloat16, training, inference) 
+- Can each environment be a kustomize overlay? 

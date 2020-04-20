@@ -1,4 +1,13 @@
-Steps (Tekton Tasks):
+Each Model has a set of steps that need to run for different use cases and in different environments.
+Use cases per model are related to the user profile, for example a model may expose the following use cases:
+- A README showing how the model can be run
+- A Notebook walking the user through the steps to download a dataset, preprocess the data and then run the model
+- A script or scripts that the user runs on bare-metal to train a model or run inference on a model
+- A script or scripts that the user runs in docker to train a model or run inference on a model
+- A deployment yaml that the user deploys to kubernetes using kubectl
+
+The steps per use case may vary as a function of the use case. 
+For example, running the model on bare-metal may involve something like:
 1. apt install (Kustomize function)
 2. virtualenv create
 3. pip install requirements.txt
@@ -6,10 +15,16 @@ Steps (Tekton Tasks):
 5. Convert to TFRecord
 6. Run Training
 
+Similary, running the model in docker may involve something like:
+1. Download a docker image specifically built for the model
+2. Run the docker image that does similar steps as the bare-metal use case above.
 
-Environments (Kustomize Plugins):
-- Readme (Kustomize overlay) 
-- Notebook (Kustomize overlay)
-- Bare Metal (Kustomize overlay)
-- Docker (Kustomize overlay)
-- Kubernetes (Kustomize overlay)
+
+Environments 
+- Readme 
+- Notebook 
+- Bare Metal 
+- Docker 
+  - multi-instance 
+  - multi-node
+- Kubernetes 

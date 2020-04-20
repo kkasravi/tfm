@@ -9,7 +9,7 @@ STEPS?=2
 all: build
 
 install:
-	dsh add autoconf-2.69-11 gcc-9 openmpi-2.1.1-8 openssh-7.6
+	dsh add gcc-9 openmpi-2.1.1-8 openssh-7.6
 
 venv: install
 	dsh venv 3.7.0 resnet50v1_5 && \
@@ -25,7 +25,7 @@ clean:
 run-help:
 	MKL_VERBOSE=1 MKLDNN_VERBOSE=1 DNNL_VERBOSE=1 PYTHONPATH=$(BENCHMARKS) $(PYTHON_EXE) $(BENCHMARKS)/launch_benchmark.py --help
 
-run: clean
+run: clean build
 	NUM_CORES=$(NUM_CORES) KMP_AFFINITY=$(KMP_AFFINITY) BENCHMARKS=$(BENCHMARKS) PYTHON_EXE=$(PYTHON_EXE) ./launch_benchmark.sh
 
 test:
@@ -49,5 +49,5 @@ training-mpi: clean
 training-mpi1: clean
 	MPI_NUM_PROCESSES=2 MPI_NUM_PROCESSES_PER_SOCKET=1 MKL_VERBOSE=1 MKLDNN_VERBOSE=1 DNNL_VERBOSE=1 PYTHON_EXE=$(PYTHON_EXE) PYTHONPATH=$(BENCHMARKS) $(PYTHON_EXE) $(BENCHMARKS)/common/tensorflow/run_tf_benchmark.py --framework=tensorflow --use-case=image_recognition --model-name=resnet50v1_5 --precision=fp32 --mode=training --benchmark-dir=$(BENCHMARKS) --intelai-models=$(MODELS)/models/image_recognition/tensorflow/resnet50v1_5 --num-cores=20 --checkpoint=$(PWD)/checkpoints --data-location=/tf_dataset/dataset/TF_Imagenet_FullData --steps=10 | tee $(PWD)/logs/output.log
 
-mpirun: clean
+mpirun: clean build
 	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:/usr/local/lib/openmpi PYTHONPATH=$$PYTHONPATH:~/Github/models/models/image_recognition/tensorflow/resnet50v1_5/training mpirun --allow-run-as-root -n 2 --map-by socket /home/appuser/.pyenv/versions/resnet50v1_5/bin/python ~/Github/models/models/image_recognition/tensorflow/resnet50v1_5/training/mlperf_resnet/imagenet_main.py 2 --batch_size=64 --max_train_steps=10 --train_epochs=2 --epochs_between_evals=1 --inter_op_parallelism_threads 2 --intra_op_parallelism_threads 20 --version 1 --resnet_size 50 --data_dir=/tf_dataset/dataset/TF_Imagenet_FullData --model_dir=$$PWD/checkpoints 2>&1 | tee $$PWD/logs/output.log
