@@ -16,7 +16,14 @@ spec:
         name: manifests
         path: application/application
     name: application
+  - kustomizeConfig:
+      overlays:
+      - application
+      repoRef:
+        name: manifests
+        path: mpi-job/mpi-operator
+    name: mpi-operator
   repos:
   - name: manifests
     uri: /Users/kdkasrav/Github/manifests
-  version: v1.0.1
+  version: master

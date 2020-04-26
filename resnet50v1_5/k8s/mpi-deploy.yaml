@@ -99,7 +99,12 @@ spec:
             required:
             - replicas
           title: The MPIJob spec
-  version: v1alpha1
+  version: v1alpha2
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kubeflow
 ---
 apiVersion: v1
 kind: ServiceAccount

@@ -2,7 +2,7 @@ apiVersion: kubeflow.org/v1alpha2
 kind: MPIJob
 metadata:
   name: tensorflow-mnist
-  namespace: mpi-operator
+  namespace: kubeflow
 spec:
   slotsPerWorker: 1
   cleanPodPolicy: Running
