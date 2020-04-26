@@ -1,0 +1,16 @@
+apiVersion: kfdef.apps.kubeflow.org/v1
+kind: KfDef
+metadata:
+  name: mpi
+  namespace: kubeflow
+spec:
+  applications:
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: mpi-job/mpi-operator
+    name: mpi-operator
+  repos:
+  - name: manifests
+    uri: https://github.com/kubeflow/manifests/archive/v1.0.2.tar.gz
+  version: v1.0.2
