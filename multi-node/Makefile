@@ -16,9 +16,10 @@ generate:
 	echo '---' >> multi-node.yaml
 	kustomize build kustomize/mpi-operator >> multi-node.yaml
 
-deploy:
-	kubectl apply -f application-crds.yaml && \
-	kubectl apply -f application.yaml && \
+validate:
+	kubectl apply -f multi-node.yaml --dry-run=client --validate
+
+deploy: validate
 	kubectl apply -f multi-node.yaml
 
 run-job:
@@ -31,9 +32,6 @@ clean:
 	kubectl delete clusterrolebindings.rbac.authorization.k8s.io mpi-operator
 	kubectl delete clusterroles.rbac.authorization.k8s.io mpi-operator
 	kubectl delete crd mpijobs.kubeflow.org
-
-validate:
-	kubectl apply -f multi-node.yaml --dry-run=client --validate
 
 status:
 	kubectl logs -n kubeflow $(shell kubectl get -n kubeflow pods -oname | sed 's/^pod\///')
