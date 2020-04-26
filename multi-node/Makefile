@@ -10,9 +10,11 @@ build:
 	kfctl build -f kfctl-multi-node.yaml
 
 generate:
-	kustomize build kustomize/application-crds > application-crds.yaml
-	kustomize build kustomize/application > application.yaml
-	kustomize build kustomize/mpi-operator > multi-node.yaml
+	kustomize build kustomize/application-crds > multi-node.yaml
+	echo '---' >> multi-node.yaml
+	kustomize build kustomize/application >> multi-node.yaml
+	echo '---' >> multi-node.yaml
+	kustomize build kustomize/mpi-operator >> multi-node.yaml
 
 deploy:
 	kubectl apply -f application-crds.yaml && \
@@ -29,6 +31,9 @@ clean:
 	kubectl delete clusterrolebindings.rbac.authorization.k8s.io mpi-operator
 	kubectl delete clusterroles.rbac.authorization.k8s.io mpi-operator
 	kubectl delete crd mpijobs.kubeflow.org
+
+validate:
+	kubectl apply -f multi-node.yaml --dry-run=client --validate
 
 status:
 	kubectl logs -n kubeflow $(shell kubectl get -n kubeflow pods -oname | sed 's/^pod\///')
