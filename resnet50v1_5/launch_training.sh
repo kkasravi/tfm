@@ -37,4 +37,4 @@ python ${BENCHMARKS}/launch_benchmark.py \
          $MPI_NUM_PROCESSES \
          $MPI_NUM_PROCESSES_PER_SOCKET \
          $OUTPUT_DIR \
-         --data-location=/tf_dataset/dataset/TF_Imagenet_FullData --steps=$STEPS 2>&1 | tee $PWD/logs/output.log
+         --data-location=/tf_dataset_copy/dataset/TF_Imagenet_MiniData_Half --steps=$STEPS 2>&1 | tee $PWD/logs/output.log
