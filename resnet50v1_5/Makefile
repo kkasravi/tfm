@@ -1,6 +1,7 @@
 PWD:=$(shell pwd)
 MODELS:=$(shell dsh config get data repos ai-models location)
 BENCHMARKS:=$(MODELS)/benchmarks
+TRAINING:=$(MODELS)/models/image_recognition/tensorflow/resnet50v1_5/training
 PYTHON_EXE?=$(shell pyenv which python)
 NUM_CORES:=20
 KMP_AFFINITY:='noverbose,warnings,respect,granularity=core,none'
@@ -11,16 +12,16 @@ all: build
 install:
 	dsh add gcc-9 openmpi-4.0.3 openssh-7.6
 
-venv: install
+venv:
 	dsh venv 3.7.0 resnet50v1_5 && \
 		pyenv local resnet50v1_5 && \
 		pip install -r requirements.txt
 
 clean:
-	rm -rf checkpoints logs && mkdir checkpoints logs
+	rm -rf checkpoints logs && mkdir checkpoints logs $(BENCHMARKS)/common/tensorflow/logs/*
 
 run-help:
-	MKL_VERBOSE=1 MKLDNN_VERBOSE=1 DNNL_VERBOSE=1 PYTHONPATH=$(BENCHMARKS) $(PYTHON_EXE) $(BENCHMARKS)/launch_benchmark.py --help
+	MKL_VERBOSE=1 MKLDNN_VERBOSE=1 DNNL_VERBOSE=1 PYTHONPATH=$(BENCHMARKS):$(TRAINING) $(PYTHON_EXE) $(BENCHMARKS)/launch_benchmark.py --help
 
 run: clean venv
 	NUM_CORES=$(NUM_CORES) KMP_AFFINITY=$(KMP_AFFINITY) BENCHMARKS=$(BENCHMARKS) PYTHON_EXE=$(PYTHON_EXE) ./launch_benchmark.sh
@@ -53,4 +54,7 @@ run-multinode: clean venv
 	VERBOSE=true MPI_HOSTNAMES='aipg-ra-skx-205.ra.intel.com,aipg-ra-skx-195.ra.intel.com' MPI_NUM_PROCESSES=4 MKL_VERBOSE=1 MKLDNN_VERBOSE=1 DNNL_VERBOSE=1 PYTHON_EXE=$(PYTHON_EXE) PYTHONPATH=$(BENCHMARKS) $(PYTHON_EXE) $(BENCHMARKS)/common/tensorflow/run_tf_benchmark.py --framework=tensorflow --use-case=image_recognition --model-name=resnet50v1_5 --precision=fp32 --mode=training --benchmark-dir=$(BENCHMARKS) --intelai-models=$(MODELS)/models/image_recognition/tensorflow/resnet50v1_5 --num-cores=20 --checkpoint=$(PWD)/checkpoints --data-location=/tf_dataset/dataset/TF_Imagenet_FullData --steps=10 2>&1 | tee $(PWD)/logs/output.log
 
 run-multinode1: clean
-	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/lib/openmpi VERBOSE='--verbose' PRECISION=fp32 BATCH_SIZE='--batch-size=128' MPI_HOSTNAMES='--mpi_hostnames=aipg-ra-skx-219.ra.intel.com,aipg-ra-skx-220.ra.intel.com' MPI_NUM_PROCESSES='--mpi_num_processes=4' STEPS=$(STEPS) NUM_CORES=$(NUM_CORES) KMP_AFFINITY=$(KMP_AFFINITY) BENCHMARKS=$(BENCHMARKS) PYTHON_EXE=$(PYTHON_EXE) OUTPUT_DIR='--output_dir='$(PWD)/logs ./launch_training.sh
+	NOINSTALL='True' PYTHONPATH="$(BENCHMARKS):$(TRAINING)" LD_LIBRARY_PATH="$(LD_LIBRARY_PATH):/usr/local/lib/:/usr/local/lib/openmpi/" VERBOSE='--verbose' PRECISION=fp32 BATCH_SIZE='--batch-size=128' MPI_HOSTNAMES='--mpi_hostnames=aipg-ra-skx-219.ra.intel.com,aipg-ra-skx-220.ra.intel.com' MPI_NUM_PROCESSES='--mpi_num_processes=4' STEPS=$(STEPS) NUM_CORES=$(NUM_CORES) KMP_AFFINITY=$(KMP_AFFINITY) BENCHMARKS=$(BENCHMARKS) TRAINING=$(TRAINING) PYTHON_EXE=$(PYTHON_EXE) OUTPUT_DIR='--output_dir='$(PWD)/logs ./launch_training.sh
+
+run-multinode2: clean
+	NOINSTALL='True' PYTHONPATH=$PYTHONPATH:/root/models/models/common/tensorflow/:/root/models/models/image_recognition/tensorflow/resnet50v1_5/training/ && mpirun -x PYTHONPATH --allow-run-as-root -mca plm_rsh_args "-i /root/.ssh/id_rsa -p 32800" --host $hostNames -np $npCount --map-by socket python3 /root/models/benchmarks/../models/image_recognition/tensorflow/resnet50v1_5/training/mlperf_resnet/imagenet_main.py 2 --batch_size=128 --max_train_steps=10 --train_epochs=1 --epochs_between_evals=1 --inter_op_parallelism_threads 2 --intra_op_parallelism_threads 22 --version 1 --resnet_size 50 --data_dir=/tf_dataset/dataset/TF_Imagenet_FullData/ 2>&1 | tee models/resnet50v1_5_multinode.log

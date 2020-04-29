@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-. /etc/profile
 STEPS=${STEPS}
 BENCHMARKS=${BENCHMARKS}
+TRAINING=${TRAINING}
 VERBOSE=${VERBOSE=''}
 PWD=${PWD-$(pwd)}
-KMP_AFFINITY=${KMP_AFFINITY-'granularity=fine,verbose,compact,1,0'}
 MPI_HOSTNAMES=${MPI_HOSTNAMES-''}
 NUM_CORES=${NUM_CORES-20}
 MPI_NUM_PROCESSES=${MPI_NUM_PROCESSES-''}
@@ -16,16 +15,21 @@ PYTHON_EXE=${PYTHON_EXE-''}
 export MKL_VERBOSE=1
 export MKLDNN_VERBOSE=1
 export DNNL_VERBOSE=1
-export PYTHONPATH=$BENCHMARKS
+export PYTHONPATH=${BENCHMARKS}:${TRAINING}
+export NOINSTALL=${NOINSTALL}
 
 
-rm -rf checkpoints logs && mkdir checkpoints logs && \
-    export PYENV_ROOT="$HOME/.pyenv";
-    export PATH="$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH";
-    eval "$(pyenv init -)";
-    eval "$(pyenv virtualenv-init -)"
-pyenv activate resnet50v1_5 &&
-python ${BENCHMARKS}/launch_benchmark.py \
+rm -rf checkpoints logs && 
+mkdir checkpoints logs 
+#    export PYENV_ROOT="$HOME/.pyenv";
+#    export PATH="$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH";
+#    eval "$(pyenv init -)";
+#    eval "$(pyenv virtualenv-init -)"
+echo 'PYTHONPATH='$PYTHONPATH
+echo 'NOINSTALL='$NOINSTALL
+
+pyenv which python
+PYTHONPATH=$PYTHONPATH NOINSTALL=$NOINSTALL python ${BENCHMARKS}/launch_benchmark.py \
          $VERBOSE \
          --model-name=resnet50v1_5 \
          --precision=$PRECISION \
