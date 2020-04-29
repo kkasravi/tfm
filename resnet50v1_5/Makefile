@@ -10,10 +10,10 @@ STEPS?=2
 all: build
 
 install:
-	dsh add gcc-9 openmpi-4.0.3 openssh-7.6
+	dsh add gcc-8 openmpi-4.0.3 openssh-7.6
 
 venv:
-	dsh venv 3.7.0 resnet50v1_5 && \
+	pyenv virtualenv 3.7.0 resnet50v1_5 && \
 		pyenv local resnet50v1_5 && \
 		pip install -r requirements.txt
 
