@@ -18,7 +18,7 @@ venv:
 		pip install -r requirements.txt
 
 clean:
-	rm -rf checkpoints logs && mkdir checkpoints logs $(BENCHMARKS)/common/tensorflow/logs/*
+	rm -rf checkpoints/* logs/* $(BENCHMARKS)/common/tensorflow/logs/*
 
 run-help:
 	MKL_VERBOSE=1 MKLDNN_VERBOSE=1 DNNL_VERBOSE=1 PYTHONPATH=$(BENCHMARKS):$(TRAINING) $(PYTHON_EXE) $(BENCHMARKS)/launch_benchmark.py --help
