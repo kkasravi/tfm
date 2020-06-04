@@ -3,6 +3,7 @@ all: build
 build-container:
 	dsh restart
 	dsh add image-recognition-2.1.0
+	docker image rmi kkasravi/image-recognition:latest || exit 0
 	dsh commit kkasravi/image-recognition:latest
 
 push-container:
@@ -10,16 +11,19 @@ push-container:
 
 build-venv:
 	dsh restart
-	dsh add image-recognition-2.1.0 resnet50v1_5-training-fp32-venv-2.1.0
+	dsh add resnet50v1_5-training-fp32-venv-2.1.0
+	docker image rmi kkasravi/resnet50v1_5-training-fp32-venv-build:latest || exit 0
 	dsh commit kkasravi/resnet50v1_5-training-fp32-venv-build:latest
 
 build-venv-export:
+	docker image rmi kkasravi/resnet50v1_5-training-fp32-venv:latest || exit 0
 	dsh export /home/appuser/.pyenv kkasravi/resnet50v1_5-training-fp32-venv-build:latest /home/appuser/.pyenv kkasravi/resnet50v1_5-training-fp32-venv:latest
 
 push-venv:
 	docker push kkasravi/resnet50v1_5-training-fp32-venv:latest
 
 build-model-export:
+	docker image rmi kkasravi/resnet50v1_5-training-fp32-model:latest || exit 0
 	dsh export /workspace/resnet50v1_5_fp32_training tf-resnet50v1-5-fp32-training:2.1.0 /mnt/ kkasravi/resnet50v1_5-training-fp32-model:latest
 
 push-model:
