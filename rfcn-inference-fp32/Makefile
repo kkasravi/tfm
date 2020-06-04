@@ -2,7 +2,7 @@ all: build
 
 build-container:
 	dsh restart
-	dsh add object-detection-2.1.0 gcc-8
+	dsh add object-detection-2.1.0
 	dsh commit kkasravi/object-detection:latest
 
 push-container:
@@ -10,7 +10,7 @@ push-container:
 
 build-venv:
 	dsh restart
-	dsh add object-detection-2.1.0 gcc-8 rfcn-inference-fp32-venv-2.1.0
+	dsh add object-detection-2.1.0 rfcn-inference-fp32-venv-2.1.0
 	dsh commit kkasravi/rfcn-inference-fp32-venv-build:latest
 
 build-venv-export:

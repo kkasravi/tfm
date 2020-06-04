@@ -1,60 +1,28 @@
-PWD:=$(shell pwd)
-MODELS:=$(shell dsh config get data repos ai-models location)
-BENCHMARKS:=$(MODELS)/benchmarks
-TRAINING:=$(MODELS)/models/image_recognition/tensorflow/resnet50v1_5/training
-PYTHON_EXE?=$(shell pyenv which python)
-NUM_CORES:=20
-KMP_AFFINITY:='noverbose,warnings,respect,granularity=core,none'
-STEPS?=2
-
 all: build
 
-install:
-	dsh add gcc-8 openmpi-4.0.3 openssh-7.6
+build-container:
+	dsh restart
+	dsh add image-recognition-2.1.0
+	dsh commit kkasravi/image-recognition:latest
 
-venv:
-	pyenv virtualenv 3.7.0 resnet50v1_5 && \
-		pyenv local resnet50v1_5 && \
-		pip install -r requirements.txt
+push-container:
+	docker push kkasravi/image-recognition:latest
 
-clean:
-	rm -rf checkpoints/* logs/* $(BENCHMARKS)/common/tensorflow/logs/*
+build-venv:
+	dsh restart
+	dsh add image-recognition-2.1.0 resnet50v1_5-training-fp32-venv-2.1.0
+	dsh commit kkasravi/resnet50v1_5-training-fp32-venv-build:latest
 
-run-help:
-	MKL_VERBOSE=1 MKLDNN_VERBOSE=1 DNNL_VERBOSE=1 PYTHONPATH=$(BENCHMARKS):$(TRAINING) $(PYTHON_EXE) $(BENCHMARKS)/launch_benchmark.py --help
+build-venv-export:
+	dsh export /home/appuser/.pyenv kkasravi/resnet50v1_5-training-fp32-venv-build:latest /home/appuser/.pyenv kkasravi/resnet50v1_5-training-fp32-venv:latest
 
-run: clean venv
-	NUM_CORES=$(NUM_CORES) KMP_AFFINITY=$(KMP_AFFINITY) BENCHMARKS=$(BENCHMARKS) PYTHON_EXE=$(PYTHON_EXE) ./launch_benchmark.sh
+push-venv:
+	docker push kkasravi/resnet50v1_5-training-fp32-venv:latest
 
-test:
-	@echo MODELS=$(MODELS) BENCHMARKS=$(BENCHMARKS) PYTHON_EXE=$(PYTHON_EXE)
+build-model-export:
+	dsh export /workspace/resnet50v1_5_fp32_training tf-resnet50v1-5-fp32-training:2.1.0 /mnt/ kkasravi/resnet50v1_5-training-fp32-model:latest
 
-inference-help:
-	PYTHON_EXE=$(PYTHON_EXE) PYTHONPATH=$(BENCHMARKS) $(PYTHON_EXE) $(BENCHMARKS)/common/tensorflow/run_tf_benchmark.py --help
+push-model:
+	docker push kkasravi/resnet50v1_5-training-fp32-model:latest
 
-inference: clean
-	PYTHON_EXE=$(PYTHON_EXE) PYTHONPATH=$(BENCHMARKS) $(PYTHON_EXE) $(BENCHMARKS)/common/tensorflow/run_tf_benchmark.py --framework=tensorflow --use-case=image_recognition --model-name=resnet50v1_5 --precision=int8 --mode=inference --benchmark-dir=$(BENCHMARKS) --intelai-models=$(MODELS)/models/image_recognition/tensorflow/resnet50v1_5 --num-cores=20 --batch-size=128 --socket-id=0 --output_dir=$(PWD)/logs --benchmark-only --model-source-dir=$(PWD) --in-graph=$(PWD)/resnet50v1_5_int8_pretrained_model.pb
-
-training: clean
-	STEPS=$(STEPS) NUM_CORES=$(NUM_CORES) KMP_AFFINITY=$(KMP_AFFINITY) BENCHMARKS=$(BENCHMARKS) PYTHON_EXE=$(PYTHON_EXE) ./launch_training.sh
-
-training1: clean
-	MPI_NUM_PROCESSES_PER_SOCKET=2 MPI_NUM_PROCESSES=4 MKL_VERBOSE=1 MKLDNN_VERBOSE=1 DNNL_VERBOSE=1 PYTHON_EXE=$(PYTHON_EXE) PYTHONPATH=$(BENCHMARKS) $(PYTHON_EXE) $(BENCHMARKS)/common/tensorflow/run_tf_benchmark.py --framework=tensorflow --use-case=image_recognition --model-name=resnet50v1_5 --precision=fp32 --mode=training --benchmark-dir=$(BENCHMARKS) --intelai-models=$(MODELS)/models/image_recognition/tensorflow/resnet50v1_5 --num-cores=20 --checkpoint=$(PWD)/checkpoints --data-location=/tf_dataset/dataset/TF_Imagenet_FullData --steps=10
-
-training-mpi: clean
-	PRECISION=fp32 MPI_NUM_PROCESSES='--mpi_num_processes=2' MPI_NUM_PROCESSES_PER_SOCKET='--mpi_num_processes_per_socket=1' STEPS=$(STEPS) NUM_CORES=$(NUM_CORES) KMP_AFFINITY=$(KMP_AFFINITY) BENCHMARKS=$(BENCHMARKS) PYTHON_EXE=$(PYTHON_EXE) ./launch_training.sh --output_dir=$(PWD)/logs
-
-training-mpi1: clean
-	MPI_NUM_PROCESSES=2 MPI_NUM_PROCESSES_PER_SOCKET=1 MKL_VERBOSE=1 MKLDNN_VERBOSE=1 DNNL_VERBOSE=1 PYTHON_EXE=$(PYTHON_EXE) PYTHONPATH=$(BENCHMARKS) $(PYTHON_EXE) $(BENCHMARKS)/common/tensorflow/run_tf_benchmark.py --framework=tensorflow --use-case=image_recognition --model-name=resnet50v1_5 --precision=fp32 --mode=training --benchmark-dir=$(BENCHMARKS) --intelai-models=$(MODELS)/models/image_recognition/tensorflow/resnet50v1_5 --num-cores=20 --checkpoint=$(PWD)/checkpoints --data-location=/tf_dataset/dataset/TF_Imagenet_FullData --steps=10 | tee $(PWD)/logs/output.log
-
-run-mpi: clean venv
-	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:/usr/local/lib/openmpi PYTHONPATH=$$PYTHONPATH:~/Github/models/models/image_recognition/tensorflow/resnet50v1_5/training mpirun -n 2 --map-by socket /home/appuser/.pyenv/versions/resnet50v1_5/bin/python ~/Github/models/models/image_recognition/tensorflow/resnet50v1_5/training/mlperf_resnet/imagenet_main.py 2 --batch_size=64 --max_train_steps=10 --train_epochs=2 --epochs_between_evals=1 --inter_op_parallelism_threads 2 --intra_op_parallelism_threads 20 --version 1 --resnet_size 50 --data_dir=/tf_dataset/dataset/TF_Imagenet_FullData --model_dir=$$PWD/checkpoints 2>&1 | tee $$PWD/logs/output.log
-
-run-multinode: clean venv
-	VERBOSE=true MPI_HOSTNAMES='aipg-ra-skx-205.ra.intel.com,aipg-ra-skx-195.ra.intel.com' MPI_NUM_PROCESSES=4 MKL_VERBOSE=1 MKLDNN_VERBOSE=1 DNNL_VERBOSE=1 PYTHON_EXE=$(PYTHON_EXE) PYTHONPATH=$(BENCHMARKS) $(PYTHON_EXE) $(BENCHMARKS)/common/tensorflow/run_tf_benchmark.py --framework=tensorflow --use-case=image_recognition --model-name=resnet50v1_5 --precision=fp32 --mode=training --benchmark-dir=$(BENCHMARKS) --intelai-models=$(MODELS)/models/image_recognition/tensorflow/resnet50v1_5 --num-cores=20 --checkpoint=$(PWD)/checkpoints --data-location=/tf_dataset/dataset/TF_Imagenet_FullData --steps=10 2>&1 | tee $(PWD)/logs/output.log
-
-run-multinode1: clean
-	NOINSTALL='True' PYTHONPATH="$(BENCHMARKS):$(TRAINING)" LD_LIBRARY_PATH="$(LD_LIBRARY_PATH):/usr/local/lib/:/usr/local/lib/openmpi/" VERBOSE='--verbose' PRECISION=fp32 BATCH_SIZE='--batch-size=128' MPI_HOSTNAMES='--mpi_hostnames=aipg-ra-skx-219.ra.intel.com,aipg-ra-skx-220.ra.intel.com' MPI_NUM_PROCESSES='--mpi_num_processes=4' STEPS=$(STEPS) NUM_CORES=$(NUM_CORES) KMP_AFFINITY=$(KMP_AFFINITY) BENCHMARKS=$(BENCHMARKS) TRAINING=$(TRAINING) PYTHON_EXE=$(PYTHON_EXE) OUTPUT_DIR='--output_dir='$(PWD)/logs ./launch_training.sh
-
-run-multinode2: clean
-	NOINSTALL='True' PYTHONPATH=$PYTHONPATH:/root/models/models/common/tensorflow/:/root/models/models/image_recognition/tensorflow/resnet50v1_5/training/ && mpirun -x PYTHONPATH --allow-run-as-root -mca plm_rsh_args "-i /root/.ssh/id_rsa -p 32800" --host $hostNames -np $npCount --map-by socket python3 /root/models/benchmarks/../models/image_recognition/tensorflow/resnet50v1_5/training/mlperf_resnet/imagenet_main.py 2 --batch_size=128 --max_train_steps=10 --train_epochs=1 --epochs_between_evals=1 --inter_op_parallelism_threads 2 --intra_op_parallelism_threads 22 --version 1 --resnet_size 50 --data_dir=/tf_dataset/dataset/TF_Imagenet_FullData/ 2>&1 | tee models/resnet50v1_5_multinode.log
+build: build-container push-container build-venv build-venv-export push-venv build-model-export push-model
