@@ -38,7 +38,7 @@ scipy==1.4.1
 six==1.13.0
 tensorboard==2.1.0
 tensorflow==2.1.0
-tensorflow-cpu==2.1.0
+tensorflow-cpu==2.1.2
 tensorflow-datasets==2.1.0
 tensorflow-estimator==2.1.0
 tensorflow-metadata==0.21.1
