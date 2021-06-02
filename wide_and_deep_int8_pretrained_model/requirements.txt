@@ -37,7 +37,7 @@ tensorboard-plugin-wit==1.6.0.post2
 termcolor==1.1.0
 tf-estimator-nightly==2.3.0.dev2020031801
 tf-nightly-cpu==2.2.0.dev20200318
-urllib3==1.25.8
+urllib3==1.26.5
 virtualenv==16.0.0
 wcwidth==0.1.8
 Werkzeug==0.16.0
