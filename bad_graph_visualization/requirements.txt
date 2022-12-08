@@ -5,7 +5,7 @@ avro-python3==1.9.2.1
 blessings==1.7
 bpython==0.18
 cachetools==3.1.1
-certifi==2019.11.28
+certifi==2022.12.7
 chardet==3.0.4
 crcmod==1.7
 curtsies==0.3.1
